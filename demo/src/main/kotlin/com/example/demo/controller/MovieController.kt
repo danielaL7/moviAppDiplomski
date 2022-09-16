@@ -2,6 +2,8 @@ package com.example.demo.controller
 
 import com.example.demo.data.Movie
 import com.example.demo.data.MovieList
+import com.example.demo.data.MovieListResponse
+import com.example.demo.data.MovieResponse
 import com.example.demo.repository.ListRepository
 import com.example.demo.repository.MovieRepository
 import org.bson.types.ObjectId
@@ -14,9 +16,16 @@ class MovieController (
     private val movieRepository: MovieRepository
 ) {
     @GetMapping
-    fun getAllMovies(): ResponseEntity<List<Movie>> {
+    fun getAllMovies(@RequestParam("idUser") idUser: String,
+                     @RequestParam("idList") idList: String): ResponseEntity<List<MovieResponse>> {
         val movies = movieRepository.findAll()
-        return ResponseEntity.ok(movies)
+        var usersMovie: MutableList<MovieResponse> = mutableListOf<MovieResponse>()
+        for (item in movies) {
+            if (item.idList == idList) {
+                usersMovie.add(MovieResponse(item.id.toHexString(), item.title, item.idList))
+            }
+        }
+        return ResponseEntity.ok(usersMovie)
     }
 
     @GetMapping("/get")
@@ -31,14 +40,13 @@ class MovieController (
         return ResponseEntity.ok(moviesSpecial)
     }
 
-    @GetMapping("/delete")
+    @DeleteMapping("/delete")
     fun delete(@RequestParam("id") id: String): ResponseEntity<String> {
-        var objectId = ObjectId(id);
         val response = movieRepository.deleteById(id)
         return ResponseEntity.ok(response.toString())
     }
 
-    @GetMapping("/insert")
+    @PostMapping("/insert")
     fun insert(@RequestParam("title") title: String,
                @RequestParam("idList") idList: String): ResponseEntity<String> {
 
